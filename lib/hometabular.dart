@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:myfirst_project/view.dart';
+
 class Hometabular extends StatefulWidget {
   const Hometabular({super.key});
 
@@ -76,16 +78,16 @@ class _HometabularState extends State<Hometabular> {
               minHeight: MediaQuery.of(context).size.height - kToolbarHeight,
             ),
             child: Padding(
-              padding: const EdgeInsets.all(39.0),
+              padding: const EdgeInsets.all(32.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    'assets/dj.png',
-                    height: 150,
-                    fit: BoxFit.cover,
-                  ),
+                  // Image.asset(
+                  //   'assets/kia.jpg',
+                  //   height: 150,
+                  //   fit: BoxFit.cover,
+                  // ),
                   const SizedBox(height: 20),
                   TextField(
                     controller: nameController,
@@ -134,6 +136,17 @@ class _HometabularState extends State<Hometabular> {
                     textColor: Colors.white,
                     child: const Text("Post"),
                   ),
+
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ViewScreen()),
+                      );
+                    },
+                    child: const Text('view all dj'),
+                  ),
+
                 ],
               ),
             ),
