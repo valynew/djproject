@@ -57,9 +57,19 @@ class _ViewScreenState extends State<ViewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All DJs'),
+        title: const Text(
+          'All DJs',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            backgroundColor: Colors.black, // Optional background highlight for text
+          ),
+        ),
         backgroundColor: Colors.black,
       ),
+
+
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : users.isEmpty
@@ -86,4 +96,9 @@ class _ViewScreenState extends State<ViewScreen> {
       ),
     );
   }
+
+
+}
+
+mixin colors {
 }
