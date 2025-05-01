@@ -34,7 +34,7 @@ class _ViewScreenState extends State<ViewScreen> {
             isLoading = false;
           });
         } else {
-          showError(jsonResponse['message']);
+          showError(jsonResponse['message'] ?? "No DJs found.");
         }
       } else {
         showError("Server error: ${response.statusCode}");
@@ -67,7 +67,7 @@ class _ViewScreenState extends State<ViewScreen> {
           users.removeWhere((user) => user['id'] == id);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("User deleted successfully")),
+          const SnackBar(content: Text("User deleted successfully")),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -108,7 +108,7 @@ class _ViewScreenState extends State<ViewScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : users.isEmpty
-          ? const Center(child: Text('No users found.'))
+          ? const Center(child: Text('No DJs found.'))
           : ListView.builder(
         itemCount: users.length,
         itemBuilder: (context, index) {
@@ -123,7 +123,7 @@ class _ViewScreenState extends State<ViewScreen> {
               title: Text(user['djname']),
               subtitle: Text('${user['email']} • ${user['phonenumber']}'),
               trailing: IconButton(
-                icon: const Icon(Icons.delete, color: Colors.pink),
+                icon: const Icon(Icons.delete, color: Colors.red),
                 onPressed: () => deleteUser(user['id']),
               ),
               onTap: () {
@@ -170,7 +170,7 @@ class _AddUpdateScreenState extends State<AddUpdateScreen> {
     }
   }
 
-  Future<void> put() async {
+  Future<void> saveData() async {
     final name = nameController.text.trim();
     final email = emailController.text.trim();
     final phone = phoneController.text.trim();
@@ -194,17 +194,12 @@ class _AddUpdateScreenState extends State<AddUpdateScreen> {
     }
 
     try {
-      final response = await http.put(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
-      );
+      final response = await (widget.isUpdate
+          ? http.put(url, headers: {'Content-Type': 'application/json'}, body: jsonEncode(payload))
+          : http.post(url, headers: {'Content-Type': 'application/json'}, body: jsonEncode(payload)));
 
       final responseData = jsonDecode(response.body);
       if (response.statusCode == 200 && responseData['status'] == true) {
-        nameController.clear();
-        emailController.clear();
-        phoneController.clear();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(responseData['message'] ?? "Success!")),
         );
@@ -252,7 +247,7 @@ class _AddUpdateScreenState extends State<AddUpdateScreen> {
             ),
             const SizedBox(height: 32),
             ElevatedButton(
-              onPressed: put,
+              onPressed: saveData,
               style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
               child: Text(
                 widget.isUpdate ? 'Update DJ' : 'Add DJ',
