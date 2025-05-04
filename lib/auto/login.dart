@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../hometabular.dart'; // Ensure you import the home screen here
+import '../hometabular.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,8 +14,9 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController djnameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
+  bool isLogin = true; // Toggle between login and register
 
-  Future<void> handleLogin() async {
+  Future<void> handleAuth() async {
     final djname = djnameController.text.trim();
     final password = passwordController.text.trim();
 
@@ -28,30 +29,33 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => isLoading = true);
 
-    final url = Uri.parse('http://10.0.2.2/djproject/kali.php'); // Ensure this matches your local setup
+    final url = Uri.parse('http://10.0.2.2/djproject/kali.php');
 
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'djname': djname, 'password': password}),
+        body: jsonEncode({
+          'djname': djname,
+          'password': password,
+          'action': isLogin ? 'login' : 'register' // Send action to backend
+        }),
       );
 
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 && responseData['status'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(responseData['message'] ?? "Login successful")),
+          SnackBar(content: Text(responseData['message'] ?? "Success")),
         );
 
-        // Navigate to Hometabular after successful login or registration
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const Hometabular()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(responseData['message'] ?? "Login failed")),
+          SnackBar(content: Text(responseData['message'] ?? "Failed")),
         );
       }
     } catch (e) {
@@ -74,9 +78,11 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               children: [
                 Text(
-                  'welcome to our djapp for mix',
+                  isLogin
+                      ? 'Welcome back, DJ!'
+                      : 'Create your DJ account',
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: Colors.blue.shade900,
                   ),
@@ -102,17 +108,32 @@ class _LoginPageState extends State<LoginPage> {
                 isLoading
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
-                  onPressed: handleLogin,
+                  onPressed: handleAuth,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 40, vertical: 12),
                     backgroundColor: Colors.blue.shade800,
                   ),
-                  child: const Text(
-                    "Login / Register",
-                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  child: Text(
+                    isLogin ? "Login" : "Register",
+                    style: const TextStyle(
+                        fontSize: 18, color: Colors.white),
                   ),
                 ),
+                const SizedBox(height: 15),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      isLogin = !isLogin;
+                    });
+                  },
+                  child: Text(
+                    isLogin
+                        ? "Don't have an account? Register here"
+                        : "Already have an account? Login here",
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                )
               ],
             ),
           ),

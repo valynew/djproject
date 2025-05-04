@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'view.dart'; // Adjust as needed to navigate to the View screen
+import 'auto/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -45,8 +46,6 @@ class _HometabularState extends State<Hometabular> {
     }
     final url = Uri.parse('http://10.0.2.2/djproject/ali.php');
 
-// Adjust IP address
-
     try {
       final response = await http.post(
         url,
@@ -89,14 +88,26 @@ class _HometabularState extends State<Hometabular> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: const Text("DJ Area", style: TextStyle(color: Colors.white)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            tooltip: 'Logout',
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            },
+          ),
+        ],
       ),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(32.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, // Center content vertically
-              crossAxisAlignment: CrossAxisAlignment.center, // Center content horizontally
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // DJ Name input field
                 TextField(
@@ -150,7 +161,7 @@ class _HometabularState extends State<Hometabular> {
                   child: const Text("Post"),
                 ),
                 const SizedBox(height: 10),
-                // Button to view all DJs (Optional)
+                // Button to view all DJs
                 ElevatedButton(
                   onPressed: () {
                     Navigator.push(
