@@ -21,7 +21,7 @@ class _ViewScreenState extends State<ViewScreen> {
   bool isLoading = true;
 
   Future<void> fetchData() async {
-    final url = Uri.parse('http://192.168.1.193/djproject/ali.php');
+    final url = Uri.parse('http://10.0.2.2/djproject/ali.php');
 
     try {
       final response = await http.get(url);
@@ -52,7 +52,8 @@ class _ViewScreenState extends State<ViewScreen> {
   }
 
   Future<void> deleteUser(String id) async {
-    final url = Uri.parse('http://192.168.1.193/djproject/ali.php');
+    final url = Uri.parse('http://10.0.2.2/djproject/ali.php');
+
     try {
       final response = await http.delete(
         url,
@@ -182,7 +183,7 @@ class _AddUpdateScreenState extends State<AddUpdateScreen> {
       return;
     }
 
-    final url = Uri.parse('http://192.168.1.193/djproject/ali.php');
+    final url = Uri.parse('http://10.0.2.2/djproject/ali.php');
     final payload = {
       'djname': name,
       'email': email,
