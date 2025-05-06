@@ -32,6 +32,91 @@ class _HometabularState extends State<Hometabular> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController profileNameController = TextEditingController();
+  final TextEditingController profilePasswordController = TextEditingController();
+
+  String djName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    loadSessionData();
+  }
+
+  Future<void> loadSessionData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedName = prefs.getString('djname') ?? '';
+    setState(() {
+      djName = storedName;
+      profileNameController.text = storedName;
+    });
+  }
+
+  Future<void> updateProfileName() async {
+    final newName = profileNameController.text.trim();
+    final newPassword = profilePasswordController.text.trim();
+
+    if (newName.isEmpty || newPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Name and Password cannot be empty.")),
+      );
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final oldName = prefs.getString('djname') ?? '';
+
+    final url = Uri.parse('http://10.0.2.2/djproject/updateprofile.php');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'oldname': oldName,
+          'newname': newName,
+          'newpassword': newPassword,
+        }),
+      );
+
+      print("Update response: ${response.body}");
+
+      if (response.statusCode == 200) {
+        try {
+          final responseData = jsonDecode(response.body);
+
+          if (responseData['status'] == true) {
+            await prefs.setString('djname', newName);
+            setState(() {
+              djName = newName;
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(responseData['message'] ?? "Profile updated.")),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(responseData['message'] ?? "Update failed.")),
+            );
+          }
+        } catch (e) {
+          print("JSON Decode Error: $e");
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Invalid response from server.")),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Server error: ${response.statusCode}")),
+        );
+      }
+    } catch (e) {
+      print("Update Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Could not update profile.")),
+      );
+    }
+  }
 
   Future<void> addName() async {
     final nameText = nameController.text.trim();
@@ -45,7 +130,7 @@ class _HometabularState extends State<Hometabular> {
       return;
     }
 
-    final url = Uri.parse('http://10.0.2.2/djproject/ali.php');
+    final url = Uri.parse('http://10.0.2.2/djproject/kali.php');
 
     try {
       final response = await http.post(
@@ -106,6 +191,112 @@ class _HometabularState extends State<Hometabular> {
     );
   }
 
+  void showEditProfileSheet() {
+    profilePasswordController.clear(); // Clear password on open
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Edit Your Profile",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: profileNameController,
+                decoration: const InputDecoration(
+                  labelText: 'New DJ Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: profilePasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'New Password',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  updateProfileName();
+                  Navigator.pop(context);
+                },
+                child: const Text("Edit"),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void showProfileSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.person_pin, size: 50, color: Colors.black54),
+              const SizedBox(height: 10),
+              Text(
+                djName.isNotEmpty ? djName : "Unknown User",
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.edit),
+                label: const Text("Edit Profile"),
+                onPressed: () {
+                  Navigator.pop(context);
+                  showEditProfileSheet();
+                },
+              ),
+              const Divider(height: 30),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.logout),
+                label: const Text("Logout"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  logout();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,14 +305,17 @@ class _HometabularState extends State<Hometabular> {
         title: const Text("DJ Area", style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.info, color: Colors.white),
+            icon: const Icon(Icons.info, color: Colors.white, size: 28),
             tooltip: 'View Session Info',
             onPressed: showSessionInfo,
           ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            tooltip: 'Logout',
-            onPressed: logout,
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.person, color: Colors.white, size: 36),
+              tooltip: 'Profile / Logout',
+              onPressed: showProfileSheet,
+            ),
           ),
         ],
       ),
@@ -137,7 +331,7 @@ class _HometabularState extends State<Hometabular> {
                   'assets/images/dj.png',
                   height: 100,
                 ),
-                const SizedBox(height: 20),
+                const Divider(height: 30, thickness: 1),
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
